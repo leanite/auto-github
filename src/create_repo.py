@@ -1,7 +1,6 @@
 import getpass
 import os
 import sys
-import subprocess
 
 from github3 import login
 from github3.exceptions import AuthenticationFailed, UnprocessableEntity
@@ -17,7 +16,7 @@ def sign_in_to_github():
     session = login(username, password)
     session.me()
 
-    return session
+    return session, username, password
 
 
 def try_to_create_repo(session, repo_name):
@@ -30,7 +29,9 @@ def try_to_create_repo(session, repo_name):
         sys.exit(1)
 
 
-def after_repo_created(new_repo):
+def after_repo_created(new_repo, username, password):
+    url_password = password.replace("@","%40")
+    url_password = url_password.replace("#","%23")
     os.system("mkdir {0}".format(new_repo.name))
     os.chdir(new_repo.name)
     os.system("git init")
@@ -38,17 +39,15 @@ def after_repo_created(new_repo):
     os.system("echo '# {0}' > README.md".format(new_repo.name))
     os.system("git add .")
     os.system("git commit -m 'Initial commit'")
-    p = subprocess.Popen(['git push origin master'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    stdout, stderr = p.communicate(input='leanite\n@gbd8nlcl\n')
-    print(stdout)
-    print(stderr)
+    os.system("git push -u https://{0}:{1}@github.com/{0}/{2}.git master".format(username, url_password, new_repo.name))
+    
 
 def main():
     try:
-        session = sign_in_to_github()
+        session, username, password = sign_in_to_github()
         repo_name = input("GitHub new repository name: ")
         new_repo = try_to_create_repo(session, repo_name)
-        after_repo_created(new_repo)
+        after_repo_created(new_repo, username, password)
 
     except KeyboardInterrupt:
         print("\nBye! o/")
