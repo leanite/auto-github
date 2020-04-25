@@ -1,6 +1,7 @@
 import getpass
 import os
 import sys
+import subprocess
 
 from github3 import login
 from github3.exceptions import AuthenticationFailed, UnprocessableEntity
@@ -37,8 +38,10 @@ def after_repo_created(new_repo):
     os.system("echo '# {0}' > README.md".format(new_repo.name))
     os.system("git add .")
     os.system("git commit -m 'Initial commit'")
-    os.system("git push origin master")
-
+    p = subprocess.Popen(['git push origin master'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    stdout, stderr = p.communicate(input='leanite\n@gbd8nlcl\n')
+    print(stdout)
+    print(stderr)
 
 def main():
     try:
